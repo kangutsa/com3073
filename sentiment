@@ -1,0 +1,108 @@
+!pip install tweepy
+
+!pip install --upgrade pip
+
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import itertools
+import collections
+
+import tweepy as tw
+import nltk
+from nltk.corpus import stopwords
+import re
+import networkx
+from textblob import TextBlob
+
+import warnings
+warnings.filterwarnings("ignore")
+
+sns.set(font_scale=1.5)
+sns.set_style("whitegrid")
+
+consumer_key= 'voaBJWAhNawlc6g7yR1X8iB2F'
+consumer_secret= 'Txi7rLkitk2vod6ak1r5mWu47zwk4SCIXTmRG4BytZ6x4W6cqR'
+access_token= '20416892-77L5hCVNCu91DHAFSEDM7tm8Nur94l7FyF0OUqPaD'
+access_token_secret= 'we7H0ZPbFOuFEOUoKflTawgEUgToGEETKT9VT7xfEJ7hh'
+
+auth = tw.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tw.API(auth, wait_on_rate_limit=True)
+
+def remove_url(txt):
+    """Replace URLs found in a text string with nothing 
+    (i.e. it will remove the URL from the string).
+
+    Parameters
+    ----------
+    txt : string
+        A text string that you want to parse and remove urls.
+
+    Returns
+    -------
+    The same txt string with url's removed.
+    """
+
+    return " ".join(re.sub("([^0-9A-Za-z \t])|(\w+:\/\/\S+)", "", txt).split())
+
+
+search_term = "#impeachment -filter:retweets"
+
+tweets = tw.Cursor(api.search,
+                   q=search_term,
+                   lang="en",
+                   since='2019-10-25').items(1000)
+
+# Remove URLs
+tweets_no_urls = [remove_url(tweet.text) for tweet in tweets]
+
+
+sentiment_objects = [TextBlob(tweet) for tweet in tweets_no_urls]
+
+sentiment_objects[0].polarity, sentiment_objects[0]
+
+
+
+sentiment_values = [[tweet.sentiment.polarity, str(tweet)] for tweet in sentiment_objects]
+
+sentiment_values[0]
+
+
+sentiment_df = pd.DataFrame(sentiment_values, columns=["polarity", "tweet"])
+
+sentiment_df.head()
+
+
+
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Plot histogram of the polarity values
+sentiment_df.hist(bins=[-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1],
+             ax=ax,
+             color="purple")
+
+plt.title("Sentiments from Tweets on Impeachment")
+plt.show()
+
+
+
+sentiment_df = sentiment_df[sentiment_df.polarity != 0]
+
+
+
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Plot histogram with break at zero
+sentiment_df.hist(bins=[-1, -0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1],
+             ax=ax,
+             color="purple")
+
+plt.title("Sentiments from Tweets on Impeachment")
+plt.show()
+
+
+Then, save the page as pdf. 
+
+Turn it in to BB as your big data analysis assignment. 
